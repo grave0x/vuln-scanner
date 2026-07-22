@@ -1,0 +1,27 @@
+name: Validate Config
+
+on:
+  pull_request:
+    paths:
+      - 'config.yaml'
+      - 'config.example.yaml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install vuln-scanner
+        run: pip install -e .
+
+      - name: Validate config.example.yaml
+        run: vuln-scanner validate --config config.example.yaml
+
+      - name: Validate config.yaml (if present)
+        if: hashFiles('config.yaml') != ''
+        run: vuln-scanner validate --config config.yaml

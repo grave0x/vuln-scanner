@@ -1,0 +1,79 @@
+# vuln-scanner configuration example
+# Copy this to config.yaml and customize for your repositories
+version: 1
+
+# Global scanner settings
+settings:
+  # Temporary working directory for cloning repos
+  work_dir: "/tmp/vuln-scanner"
+  # Maximum number of concurrent scanner subprocesses
+  max_concurrent_scanners: 4
+  # Timeout per scanner tool (seconds)
+  timeout_per_scanner: 600
+  # Use shallow clones (--depth 1) for faster cloning
+  shallow_clone: true
+  # Remove cloned repos after scan completes
+  cleanup_after_scan: true
+
+# Default scanner configuration — can be overridden per-repo
+scanners:
+  # Semgrep: static analysis SAST
+  semgrep_config: "auto"       # auto | p/default | p/ci | path/to/rules
+  semgrep_metrics: "off"       # off | on
+
+  # Gitleaks: secret detection
+  gitleaks_config_path: ""     # Path to custom .gitleaks.toml (empty = use default)
+  gitleaks_redact: true        # Redact secrets in output
+
+  # Checkov: IaC scanning
+  checkov_framework: "all"     # all | terraform | kubernetes | dockerfile | ...
+  checkov_skip_frameworks: []  # Frameworks to skip, e.g. ["secrets", "sca_package"]
+
+  # Dependency vulnerability scanning
+  dependency_primary_tool: "osv-scanner"  # osv-scanner | trivy
+  dependency_ecosystem_tools: false       # Also run ecosystem-specific tools (npm audit, pip-audit, etc.)
+
+# Reporting output configuration
+reporting:
+  # SARIF results output path
+  sarif_path: "results.sarif"
+  # Human-readable summary output path
+  summary_path: "summary.md"
+
+# Repositories to scan
+repositories:
+  # Example 1: Public web app with JS + Terraform
+  - url: "https://github.com/owner/web-app.git"
+    branch: "main"
+    depth: 50                     # Clone depth (lines of history)
+    schedule: "daily"             # daily | weekly | monthly | manual
+    scanners:
+      semgrep: true
+      gitleaks: true
+      trufflehog: false
+      checkov: true
+      dependency: true
+    # Additional semgrep rule paths/directories for this repo
+    semgrep_rules: []
+    # Paths to exclude from scanning (glob patterns)
+    exclude_paths:
+      - "node_modules/"
+      - "dist/"
+      - "*.min.js"
+
+  # Example 2: Rust service with Docker
+  - url: "https://github.com/owner/rust-service.git"
+    branch: "develop"
+    depth: 50
+    schedule: "weekly"
+    scanners:
+      semgrep: true
+      gitleaks: true
+      trufflehog: false
+      checkov: true
+      dependency: true
+    semgrep_rules:
+      - "custom-rules/"
+    exclude_paths:
+      - "target/"
+      - "vendor/"

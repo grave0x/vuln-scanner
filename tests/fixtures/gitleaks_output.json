@@ -1,0 +1,1 @@
+[{"Description": "AWS Access Key", "RuleID": "aws-access-key", "File": "config/secrets.yaml", "StartLine": 15, "EndLine": 15, "Secret": "REDACTED", "Match": "AKIA..."}]

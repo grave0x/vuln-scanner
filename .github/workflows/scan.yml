@@ -1,0 +1,116 @@
+name: Vulnerability Scan
+
+on:
+  schedule:
+    - cron: '7 6 * * *'               # Daily 6:07am UTC (avoid :00 herd)
+  workflow_dispatch:
+    inputs:
+      schedule_filter:
+        description: 'Only scan repos tagged with this schedule (daily|weekly|monthly|all)'
+        required: false
+        default: 'all'
+      repo_filter:
+        description: 'Regex to filter repo URLs'
+        required: false
+        default: ''
+      dry_run:
+        description: 'Dry run (validate config + list repos, skip scanning)'
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+    paths:
+      - 'config.yaml'
+      - 'src/**'
+      - '.github/workflows/scan.yml'
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq git curl jq
+
+      - name: Install scanner tools
+        run: |
+          # semgrep via pip
+          python -m pip install --quiet semgrep
+
+          # gitleaks binary
+          GITLEAKS_VER=$(curl -s https://api.github.com/repos/gitleaks/gitleaks/releases/latest | jq -r .tag_name)
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/${GITLEAKS_VER}/gitleaks_${GITLEAKS_VER#v}_linux_amd64.tar.gz" | sudo tar xz -C /usr/local/bin gitleaks
+
+          # checkov via pip
+          python -m pip install --quiet checkov
+
+          # osv-scanner binary
+          OSV_VER=$(curl -s https://api.github.com/repos/google/osv-scanner/releases/latest | jq -r .tag_name)
+          curl -sSfL "https://github.com/google/osv-scanner/releases/download/${OSV_VER}/osv-scanner_linux_amd64" -o osv-scanner
+          chmod +x osv-scanner
+          sudo mv osv-scanner /usr/local/bin/
+
+          # Verify installations
+          semgrep --version
+          gitleaks version
+          checkov --version
+          osv-scanner --version
+
+      - name: Install vuln-scanner
+        run: pip install -e .
+
+      - name: Determine config
+        id: config
+        run: |
+          if [ -f config.yaml ]; then
+            echo "path=config.yaml" >> "$GITHUB_OUTPUT"
+          else
+            echo "path=config.example.yaml" >> "$GITHUB_OUTPUT"
+            echo "::warning::config.yaml not found, falling back to config.example.yaml"
+          fi
+
+      - name: Run scan
+        env:
+          SCHEDULE_FILTER: ${{ github.event.inputs.schedule_filter || '' }}
+          REPO_FILTER: ${{ github.event.inputs.repo_filter || '' }}
+          DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+        run: |
+          args="--config ${{ steps.config.outputs.path }}"
+          if [ -n "$SCHEDULE_FILTER" ] && [ "$SCHEDULE_FILTER" != "all" ]; then
+            args="$args --schedule $SCHEDULE_FILTER"
+          fi
+          if [ -n "$REPO_FILTER" ]; then
+            args="$args --repo-filter $REPO_FILTER"
+          fi
+          if [ "$DRY_RUN" = "true" ]; then
+            args="$args --dry-run"
+          fi
+          vuln-scanner run $args
+
+      - name: Upload SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: ${{ !cancelled() && hashFiles('results.sarif') != '' }}
+        with:
+          sarif_file: results.sarif
+          category: vuln-scanner
+
+      - name: Upload scan artifacts
+        uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: vuln-scanner-results-${{ github.run_id }}
+          path: |
+            results.sarif
+            summary.md
+          retention-days: 90

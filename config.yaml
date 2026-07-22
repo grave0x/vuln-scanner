@@ -1,0 +1,89 @@
+# vuln-scanner configuration — real repos
+version: 1
+
+settings:
+  work_dir: "/tmp/vuln-scanner"
+  max_concurrent_scanners: 2
+  timeout_per_scanner: 600
+  shallow_clone: true
+  cleanup_after_scan: true
+
+scanners:
+  semgrep_config: "auto"
+  semgrep_metrics: "off"
+  gitleaks_config_path: ""
+  gitleaks_redact: true
+  checkov_framework: "all"
+  checkov_skip_frameworks: []
+  dependency_primary_tool: "osv-scanner"
+  dependency_ecosystem_tools: false
+
+reporting:
+  sarif_path: "results.sarif"
+  summary_path: "summary.md"
+
+repositories:
+  - url: "https://github.com/grave0x/opencode-orchistrator.git"
+    branch: "main"
+    depth: 50
+    schedule: "daily"
+    scanners:
+      semgrep: true
+      gitleaks: true
+      checkov: true
+      dependency: true
+    exclude_paths:
+      - "target/"
+      - "node_modules/"
+
+  - url: "https://github.com/grave0x/flixcrack.git"
+    branch: "tui-wrapper"
+    depth: 50
+    schedule: "daily"
+    scanners:
+      semgrep: true
+      gitleaks: true
+      checkov: true
+      dependency: true
+    exclude_paths:
+      - ".venv/"
+      - "__pycache__/"
+      - "node_modules/"
+
+  - url: "https://github.com/grave0x/git-utils.git"
+    branch: "master"
+    depth: 50
+    schedule: "weekly"
+    scanners:
+      semgrep: true
+      gitleaks: true
+      checkov: true
+      dependency: true
+    exclude_paths:
+      - "node_modules/"
+
+  - url: "https://github.com/grave0x/pkg-util.git"
+    branch: "master"
+    depth: 50
+    schedule: "weekly"
+    scanners:
+      semgrep: true
+      gitleaks: true
+      checkov: true
+      dependency: true
+    exclude_paths:
+      - "build/"
+      - "node_modules/"
+
+  - url: "https://github.com/grave0x/rapiscn.git"
+    branch: "main"
+    depth: 50
+    schedule: "daily"
+    scanners:
+      semgrep: true
+      gitleaks: true
+      checkov: true
+      dependency: true
+    exclude_paths:
+      - "target/"
+      - "node_modules/"

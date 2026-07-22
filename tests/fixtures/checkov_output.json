@@ -1,0 +1,1 @@
+[{"check_id": "CKV_AWS_1", "check_name": "Ensure IAM policies are attached only to groups or roles", "file_path": "/infra/main.tf", "file_line_range": [10, 15], "severity": "MEDIUM"}]

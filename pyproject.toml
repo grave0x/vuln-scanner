@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vuln-scanner"
+version = "0.1.0"
+description = "Autonomous git repo vulnerability scanner using GitHub Actions"
+requires-python = ">=3.11"
+dependencies = ["pyyaml>=6"]
+license = {text = "MIT"}
+readme = "README.md"
+
+[project.scripts]
+vuln-scanner = "vuln_scanner.main:main"
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-mock>=3"]
+
+[tool.setuptools.packages.find]
+where = ["src"]

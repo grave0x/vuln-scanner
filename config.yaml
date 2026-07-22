@@ -89,47 +89,6 @@ repositories:
       - "target/"
       - "node_modules/"
 
-  # === Forked repos ===
-  - url: "https://github.com/grave0x/coolify.git"
-    branch: "v4.x"
-    depth: 50
-    schedule: "daily"
-    scanners:
-      semgrep: true
-      gitleaks: true
-      checkov: true
-      dependency: true
-    exclude_paths:
-      - "node_modules/"
-      - ".next/"
-      - "dist/"
-
-  - url: "https://github.com/grave0x/rustdesk.git"
-    branch: "master"
-    depth: 50
-    schedule: "daily"
-    scanners:
-      semgrep: true
-      gitleaks: true
-      checkov: true
-      dependency: true
-    exclude_paths:
-      - "target/"
-      - "node_modules/"
-      - "libs/"
-
-  - url: "https://github.com/grave0x/BountyHound.git"
-    branch: "main"
-    depth: 50
-    schedule: "weekly"
-    scanners:
-      semgrep: true
-      gitleaks: true
-      checkov: true
-      dependency: true
-    exclude_paths:
-      - "node_modules/"
-
   - url: "https://github.com/grave0x/gallery-dl.git"
     branch: "master"
     depth: 50
@@ -155,27 +114,4 @@ repositories:
     exclude_paths:
       - "node_modules/"
 
-  - url: "https://github.com/grave0x/Hyprland.git"
-    branch: "main"
-    depth: 50
-    schedule: "weekly"
-    scanners:
-      semgrep: true
-      gitleaks: true
-      checkov: false
-      dependency: true
-    exclude_paths:
-      - "build/"
-      - "subprojects/"
 
-  - url: "https://github.com/grave0x/evilginx2.git"
-    branch: "master"
-    depth: 50
-    schedule: "weekly"
-    scanners:
-      semgrep: true
-      gitleaks: true
-      checkov: true
-      dependency: true
-    exclude_paths:
-      - "node_modules/"

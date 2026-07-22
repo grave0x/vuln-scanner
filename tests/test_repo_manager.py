@@ -13,6 +13,13 @@ from vuln_scanner.repo_manager import RepoManager
 
 def _git(args, cwd):
     """Run a git command, raise on failure."""
+    env = {
+        **os.environ,
+        "GIT_AUTHOR_NAME": "test",
+        "GIT_AUTHOR_EMAIL": "test@test.com",
+        "GIT_COMMITTER_NAME": "test",
+        "GIT_COMMITTER_EMAIL": "test@test.com",
+    }
     subprocess.run(
         ["git"] + args,
         cwd=str(cwd),
@@ -20,6 +27,7 @@ def _git(args, cwd):
         capture_output=True,
         text=True,
         timeout=30,
+        env=env,
     )
 
 

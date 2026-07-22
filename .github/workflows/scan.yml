@@ -50,7 +50,7 @@ jobs:
 
           # gitleaks binary
           GITLEAKS_VER=$(curl -s https://api.github.com/repos/gitleaks/gitleaks/releases/latest | jq -r .tag_name)
-          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/${GITLEAKS_VER}/gitleaks_${GITLEAKS_VER#v}_linux_amd64.tar.gz" | sudo tar xz -C /usr/local/bin gitleaks
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/${GITLEAKS_VER}/gitleaks_${GITLEAKS_VER#v}_linux_x64.tar.gz" | sudo tar xz -C /usr/local/bin gitleaks
 
           # checkov via pip
           python -m pip install --quiet checkov

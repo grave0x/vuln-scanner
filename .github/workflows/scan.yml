@@ -85,6 +85,7 @@ jobs:
           SCHEDULE_FILTER: ${{ github.event.inputs.schedule_filter || '' }}
           REPO_FILTER: ${{ github.event.inputs.repo_filter || '' }}
           DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+          GIT_TOKEN: ${{ secrets.GIT_TOKEN || github.token }}
         run: |
           args="--config ${{ steps.config.outputs.path }}"
           if [ -n "$SCHEDULE_FILTER" ] && [ "$SCHEDULE_FILTER" != "all" ]; then

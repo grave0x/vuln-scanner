@@ -1,6 +1,7 @@
 """Git repository management: clone, fetch, cleanup."""
 
 import logging
+import os
 import re
 import shutil
 from pathlib import Path
@@ -10,6 +11,18 @@ from .config import RepoConfig, Settings
 from .utils import run, ScannerError
 
 logger = logging.getLogger(__name__)
+
+
+def _inject_token(url: str) -> str:
+    """Inject GIT_TOKEN into HTTPS GitHub URLs for private repo access."""
+    token = os.environ.get("GIT_TOKEN", "")
+    if not token:
+        return url
+    # Only rewrite HTTPS GitHub URLs
+    if url.startswith("https://github.com/"):
+        # Insert token before host: https://<token>@github.com/...
+        return url.replace("https://", f"https://{token}@", 1)
+    return url
 
 
 class RepoManager:
@@ -82,20 +95,21 @@ class RepoManager:
     @staticmethod
     def _clone(repo: RepoConfig, settings: Settings, target_path: Path) -> Path:
         """Perform a shallow or full clone."""
+        url = _inject_token(repo.url)
         if settings.shallow_clone:
             cmd = [
                 "git", "clone",
                 "--branch", repo.branch,
                 "--single-branch",
                 "--depth", str(repo.depth),
-                repo.url,
+                url,
                 str(target_path),
             ]
         else:
             cmd = [
                 "git", "clone",
                 "--branch", repo.branch,
-                repo.url,
+                url,
                 str(target_path),
             ]
 

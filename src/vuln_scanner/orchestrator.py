@@ -53,15 +53,22 @@ class Orchestrator:
         all_findings: list[Finding] = []
 
         for repo in repos:
-            findings = self._scan_repo(repo)
-            all_findings.extend(findings)
+            try:
+                findings = self._scan_repo(repo)
+                all_findings.extend(findings)
+            except Exception as e:
+                logger.error(f"Failed to scan {repo.url}: {e}")
+                continue
 
             # Cleanup if configured
             if self.config.settings.cleanup_after_scan:
-                repo_name = RepoManager._sanitize_name(repo.url)
-                self.repo_manager.cleanup(
-                    Path(self.config.settings.work_dir) / repo_name
-                )
+                try:
+                    repo_name = RepoManager._sanitize_name(repo.url)
+                    self.repo_manager.cleanup(
+                        Path(self.config.settings.work_dir) / repo_name
+                    )
+                except Exception:
+                    pass
 
         # Generate reports
         self._generate_reports(all_findings)

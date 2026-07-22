@@ -76,18 +76,22 @@ class SARIFBuilder:
         rules: dict[str, dict] = {}
 
         for f in findings:
+            # Enforce non-empty ruleId and message (required by SARIF spec)
+            rule_id = f.rule_id or "unknown"
+            message = f.message or "No description provided"
+
             # Register the rule
-            if f.rule_id not in rules:
-                rules[f.rule_id] = {
-                    "id": f.rule_id,
-                    "shortDescription": {"text": f.rule_id},
-                    "help": {"text": f.message},
+            if rule_id not in rules:
+                rules[rule_id] = {
+                    "id": rule_id,
+                    "shortDescription": {"text": rule_id},
+                    "help": {"text": message},
                 }
 
             result = {
-                "ruleId": f.rule_id,
+                "ruleId": rule_id,
                 "level": f.severity,
-                "message": {"text": f.message},
+                "message": {"text": message},
                 "locations": [{
                     "physicalLocation": {
                         "artifactLocation": {"uri": f.file_path},

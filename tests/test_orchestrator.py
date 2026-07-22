@@ -234,8 +234,92 @@ class TestOrchestratorScan:
                 assert result == 0  # No errors in findings
                 assert "semgrep failed" in caplog.text
 
-    def test_returns_1_when_errors_present(self):
-        """Return code is 1 when there are error-severity findings."""
+    def test_returns_2_when_errors_present_and_fail_on_error(self):
+        """Return code is 2 when fail_on=error and there are error findings."""
+        from vuln_scanner.scanners.base import Finding
+
+        with tempfile.TemporaryDirectory() as tmp:
+            config_path = _make_config_yaml(tmp, [
+                {
+                    "url": "https://github.com/test/repo",
+                    "branch": "main",
+                },
+            ])
+
+            with patch(
+                "vuln_scanner.orchestrator.RepoManager"
+            ) as mock_rm_cls, \
+                 patch(
+                "vuln_scanner.orchestrator.select_scanners"
+            ) as mock_select, \
+                 patch(
+                "vuln_scanner.orchestrator.SARIFBuilder"
+            ), \
+                 patch(
+                "vuln_scanner.orchestrator.SummaryWriter"
+            ):
+                mock_rm = mock_rm_cls.return_value
+                mock_rm.ensure_cloned.return_value = Path(tmp) / "cloned"
+
+                scanner = MagicMock()
+                scanner.name = "semgrep"
+                scanner.run.return_value = [
+                    Finding(
+                        rule_id="r1", message="e", severity="error",
+                        file_path="a.py", scanner="semgrep",
+                    ),
+                ]
+                mock_select.return_value = [scanner]
+
+                orch = Orchestrator(config_path, fail_on="error")
+                result = orch.run()
+
+                assert result == 2
+
+    def test_returns_1_when_warnings_present_and_fail_on_warning(self):
+        """Return code is 1 when fail_on=warning and only warnings present."""
+        from vuln_scanner.scanners.base import Finding
+
+        with tempfile.TemporaryDirectory() as tmp:
+            config_path = _make_config_yaml(tmp, [
+                {
+                    "url": "https://github.com/test/repo",
+                    "branch": "main",
+                },
+            ])
+
+            with patch(
+                "vuln_scanner.orchestrator.RepoManager"
+            ) as mock_rm_cls, \
+                 patch(
+                "vuln_scanner.orchestrator.select_scanners"
+            ) as mock_select, \
+                 patch(
+                "vuln_scanner.orchestrator.SARIFBuilder"
+            ), \
+                 patch(
+                "vuln_scanner.orchestrator.SummaryWriter"
+            ):
+                mock_rm = mock_rm_cls.return_value
+                mock_rm.ensure_cloned.return_value = Path(tmp) / "cloned"
+
+                scanner = MagicMock()
+                scanner.name = "semgrep"
+                scanner.run.return_value = [
+                    Finding(
+                        rule_id="r1", message="w", severity="warning",
+                        file_path="a.py", scanner="semgrep",
+                    ),
+                ]
+                mock_select.return_value = [scanner]
+
+                orch = Orchestrator(config_path, fail_on="warning")
+                result = orch.run()
+
+                assert result == 1
+
+    def test_returns_0_when_errors_present_and_fail_on_never(self):
+        """Return code is 0 when fail_on=never regardless of findings."""
         from vuln_scanner.scanners.base import Finding
 
         with tempfile.TemporaryDirectory() as tmp:
@@ -274,10 +358,10 @@ class TestOrchestratorScan:
                 orch = Orchestrator(config_path)
                 result = orch.run()
 
-                assert result == 1
+                assert result == 0
 
-    def test_returns_0_for_warnings_only(self):
-        """Return code is 0 when only warnings/notes are present."""
+    def test_returns_0_for_warnings_only_with_fail_on_error(self):
+        """Return code is 0 when fail_on=error and only warnings are present."""
         from vuln_scanner.scanners.base import Finding
 
         with tempfile.TemporaryDirectory() as tmp:
@@ -313,7 +397,7 @@ class TestOrchestratorScan:
                 ]
                 mock_select.return_value = [scanner]
 
-                orch = Orchestrator(config_path)
+                orch = Orchestrator(config_path, fail_on="error")
                 result = orch.run()
 
                 assert result == 0

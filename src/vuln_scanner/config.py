@@ -54,6 +54,7 @@ class ScannerDefaults:
     checkov_skip_frameworks: list[str] = field(default_factory=list)
     dependency_primary_tool: str = "osv-scanner"
     dependency_ecosystem_tools: bool = False
+    trufflehog_config: str = ""
 
 
 @dataclass
@@ -170,7 +171,8 @@ class Config:
                            "gitleaks_config_path", "gitleaks_redact",
                            "checkov_framework", "checkov_skip_frameworks",
                            "dependency_primary_tool",
-                           "dependency_ecosystem_tools"):
+                           "dependency_ecosystem_tools",
+                           "trufflehog_config"):
             if field_name in data:
                 kwargs[field_name] = data[field_name]
         return ScannerDefaults(**kwargs)

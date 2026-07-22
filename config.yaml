@@ -31,6 +31,7 @@ repositories:
     scanners:
       semgrep: true
       gitleaks: true
+      trufflehog: false
       checkov: true
       dependency: true
     exclude_paths:
@@ -44,6 +45,7 @@ repositories:
     scanners:
       semgrep: true
       gitleaks: true
+      trufflehog: false
       checkov: true
       dependency: true
     exclude_paths:
@@ -58,6 +60,7 @@ repositories:
     scanners:
       semgrep: true
       gitleaks: true
+      trufflehog: false
       checkov: true
       dependency: true
     exclude_paths:
@@ -70,6 +73,7 @@ repositories:
     scanners:
       semgrep: true
       gitleaks: true
+      trufflehog: false
       checkov: true
       dependency: true
     exclude_paths:
@@ -83,6 +87,7 @@ repositories:
     scanners:
       semgrep: true
       gitleaks: true
+      trufflehog: false
       checkov: true
       dependency: true
     exclude_paths:
@@ -96,6 +101,7 @@ repositories:
     scanners:
       semgrep: true
       gitleaks: true
+      trufflehog: false
       checkov: true
       dependency: true
     exclude_paths:
@@ -109,6 +115,7 @@ repositories:
     scanners:
       semgrep: true
       gitleaks: true
+      trufflehog: false
       checkov: true
       dependency: true
     exclude_paths:

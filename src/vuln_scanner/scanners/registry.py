@@ -9,12 +9,14 @@ from .semgrep import SemgrepScanner
 from .gitleaks import GitleaksScanner
 from .checkov import CheckovScanner
 from .dependency import DependencyScanner
+from .trufflehog import TrufflehogScanner
 
 logger = logging.getLogger(__name__)
 
 SCANNER_REGISTRY: dict[str, Type[AbstractScanner]] = {
     "semgrep": SemgrepScanner,
     "gitleaks": GitleaksScanner,
+    "trufflehog": TrufflehogScanner,
     "checkov": CheckovScanner,
     "dependency": DependencyScanner,
 }

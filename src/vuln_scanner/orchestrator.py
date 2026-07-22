@@ -25,11 +25,15 @@ class Orchestrator:
         schedule_filter: str | None = None,
         repo_filter: str | None = None,
         dry_run: bool = False,
+        fail_on: str = "never",
+        output_dir: str | None = None,
     ):
         self.config = Config.load(config_path)
         self.schedule_filter = schedule_filter
         self.repo_filter = repo_filter
         self.dry_run = dry_run
+        self.fail_on = fail_on
+        self.output_dir = output_dir
         self.repo_manager = RepoManager()
 
     def run(self) -> int:
@@ -81,7 +85,7 @@ class Orchestrator:
             f"({errors} errors, {warnings} warnings)"
         )
 
-        return 1 if errors > 0 else 0
+        return self._compute_exit_code(errors, warnings)
 
     def _filter_repos(self) -> list:
         """Filter repositories by schedule and repo URL filter."""
@@ -142,10 +146,40 @@ class Orchestrator:
             repo_url = first_repo.url
             repo_branch = first_repo.branch
 
+        output_dir = self.output_dir or ""
+        sarif_path = str(Path(output_dir) / rep.sarif_path) if output_dir else rep.sarif_path
+        summary_path = str(Path(output_dir) / rep.summary_path) if output_dir else rep.summary_path
+
+        # Ensure output directory exists
+        if output_dir:
+            Path(output_dir).mkdir(parents=True, exist_ok=True)
+
         sarif_doc = SARIFBuilder.build(findings, repo_url, repo_branch, rep)
-        SARIFBuilder.write(sarif_doc, rep.sarif_path)
-        logger.info(f"SARIF report written to {rep.sarif_path}")
+        SARIFBuilder.write(sarif_doc, sarif_path)
+        logger.info(f"SARIF report written to {sarif_path}")
 
         summary = SummaryWriter.generate(repo_url, repo_branch, findings)
-        SummaryWriter.write(summary, rep.summary_path)
-        logger.info(f"Summary written to {rep.summary_path}")
+        SummaryWriter.write(summary, summary_path)
+        logger.info(f"Summary written to {summary_path}")
+
+    def _compute_exit_code(self, errors: int, warnings: int) -> int:
+        """Compute exit code based on fail_on threshold.
+
+        Returns 2 for error-level, 1 for warning-level, 0 for note/never.
+        """
+        if self.fail_on == "never":
+            return 0
+        if self.fail_on == "error" and errors > 0:
+            return 2
+        if self.fail_on == "warning" and (errors > 0 or warnings > 0):
+            if errors > 0:
+                return 2
+            return 1
+        if self.fail_on == "note":
+            if errors > 0:
+                return 2
+            if warnings > 0:
+                return 1
+            return 0
+        # Default: errors drive non-zero exit
+        return 1 if errors > 0 else 0

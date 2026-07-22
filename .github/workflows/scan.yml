@@ -63,11 +63,16 @@ jobs:
           chmod +x osv-scanner
           sudo mv osv-scanner /usr/local/bin/
 
+          # trufflehog binary
+          TRUFFLEHOG_VER=$(curl -sSf -H "Authorization: Bearer $GH_TOKEN" https://api.github.com/repos/trufflesecurity/trufflehog/releases/latest | jq -r .tag_name)
+          curl -sSfL "https://github.com/trufflesecurity/trufflehog/releases/download/${TRUFFLEHOG_VER}/trufflehog_${TRUFFLEHOG_VER#v}_linux_amd64.tar.gz" | sudo tar xz -C /usr/local/bin trufflehog
+
           # Verify installations
           semgrep --version
           gitleaks version
           checkov --version
           osv-scanner --version
+          trufflehog --version
 
       - name: Install vuln-scanner
         run: pip install -e .
@@ -99,7 +104,7 @@ jobs:
           if [ "$DRY_RUN" = "true" ]; then
             args="$args --dry-run"
           fi
-          vuln-scanner run $args
+          vuln-scanner run $args --fail-on error
 
       - name: Upload SARIF to GitHub Security
         uses: github/codeql-action/upload-sarif@4187e74d05793876e9989daffde9c3e66b4acd07  # v3

@@ -10,6 +10,7 @@ from vuln_scanner.scanners.base import Finding
 from vuln_scanner.scanners.semgrep import SemgrepScanner
 from vuln_scanner.scanners.gitleaks import GitleaksScanner
 from vuln_scanner.scanners.checkov import CheckovScanner
+from vuln_scanner.scanners.trufflehog import TrufflehogScanner
 from vuln_scanner.scanners.registry import (
     SCANNER_REGISTRY,
     select_scanners,
@@ -104,6 +105,45 @@ class TestGitleaksScanner:
         mock_run = mocker.patch("subprocess.run")
 
         scanner = GitleaksScanner()
+        findings = scanner.run(Path("/tmp/repo"))
+
+        assert findings == []
+        mock_run.assert_not_called()
+
+
+class TestTrufflehogScanner:
+    """Tests for TrufflehogScanner."""
+
+    def test_parse(self, mocker):
+        """Feed mock NDJSON and verify Finding fields are parsed correctly."""
+        repo_path = Path("/tmp/repo")
+        fixture = _load_fixture("trufflehog_output.json")
+
+        mocker.patch.object(TrufflehogScanner, "check_installed", return_value=True)
+        _mock_subprocess_run(mocker, fixture)
+
+        scanner = TrufflehogScanner()
+        findings = scanner.run(repo_path)
+
+        assert len(findings) == 1
+        f = findings[0]
+        assert f.rule_id == "AWS"
+        assert f.message == "AWS"
+        assert f.severity == "error"
+        assert f.file_path == "config/.env"
+        assert f.scanner == "trufflehog"
+        assert f.confidence == "high"
+        assert f.raw["raw"] == "AKIAIOSFODNN7EXAMPLE"
+        assert f.raw["redacted"] == "AKIA****"
+        assert f.raw["source_id"] == 1
+        assert f.raw["verified"] is False
+
+    def test_not_installed(self, mocker):
+        """Return empty list when trufflehog is not installed."""
+        mocker.patch.object(TrufflehogScanner, "check_installed", return_value=False)
+        mock_run = mocker.patch("subprocess.run")
+
+        scanner = TrufflehogScanner()
         findings = scanner.run(Path("/tmp/repo"))
 
         assert findings == []
@@ -233,5 +273,6 @@ class TestRegistry:
         """All expected scanners are registered."""
         assert "semgrep" in SCANNER_REGISTRY
         assert "gitleaks" in SCANNER_REGISTRY
+        assert "trufflehog" in SCANNER_REGISTRY
         assert "checkov" in SCANNER_REGISTRY
         assert "dependency" in SCANNER_REGISTRY

@@ -25,6 +25,9 @@ scanners:
   gitleaks_config_path: ""     # Path to custom .gitleaks.toml (empty = use default)
   gitleaks_redact: true        # Redact secrets in output
 
+  # Trufflehog: secret detection (alternative to gitleaks)
+  trufflehog_config: ""       # Path to custom trufflehog config (empty = use default)
+
   # Checkov: IaC scanning
   checkov_framework: "all"     # all | terraform | kubernetes | dockerfile | ...
   checkov_skip_frameworks: []  # Frameworks to skip, e.g. ["secrets", "sca_package"]

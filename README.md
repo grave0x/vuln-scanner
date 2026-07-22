@@ -15,6 +15,8 @@ GitHub's Security tab.
 
 ## Quick start
 
+See **[docs/setup.md](docs/setup.md)** for the full setup guide (private repos, local usage, configuration reference).
+
 ### 1. Fork or create from this repo
 
 ### 2. Configure your repos

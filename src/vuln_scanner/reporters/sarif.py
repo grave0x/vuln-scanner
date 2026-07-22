@@ -94,7 +94,7 @@ class SARIFBuilder:
                 "message": {"text": message},
                 "locations": [{
                     "physicalLocation": {
-                        "artifactLocation": {"uri": f.file_path},
+                        "artifactLocation": {"uri": f.file_path or "unknown"},
                     }
                 }],
             }

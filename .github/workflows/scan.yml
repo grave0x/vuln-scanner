@@ -44,19 +44,21 @@ jobs:
           sudo apt-get install -y -qq git curl jq
 
       - name: Install scanner tools
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           # semgrep via pip
           python -m pip install --quiet semgrep
 
           # gitleaks binary
-          GITLEAKS_VER=$(curl -s https://api.github.com/repos/gitleaks/gitleaks/releases/latest | jq -r .tag_name)
+          GITLEAKS_VER=$(curl -sSf -H "Authorization: Bearer $GH_TOKEN" https://api.github.com/repos/gitleaks/gitleaks/releases/latest | jq -r .tag_name)
           curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/${GITLEAKS_VER}/gitleaks_${GITLEAKS_VER#v}_linux_x64.tar.gz" | sudo tar xz -C /usr/local/bin gitleaks
 
           # checkov via pip
           python -m pip install --quiet checkov
 
           # osv-scanner binary
-          OSV_VER=$(curl -s https://api.github.com/repos/google/osv-scanner/releases/latest | jq -r .tag_name)
+          OSV_VER=$(curl -sSf -H "Authorization: Bearer $GH_TOKEN" https://api.github.com/repos/google/osv-scanner/releases/latest | jq -r .tag_name)
           curl -sSfL "https://github.com/google/osv-scanner/releases/download/${OSV_VER}/osv-scanner_linux_amd64" -o osv-scanner
           chmod +x osv-scanner
           sudo mv osv-scanner /usr/local/bin/
